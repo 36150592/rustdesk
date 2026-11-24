@@ -1303,21 +1303,15 @@ fn get_api_server_(api: String, custom: String) -> String {
     if !api.is_empty() {
         return api.to_owned();
     }
+    
+    // Custom client: the API server is behind an HTTPS reverse proxy on 443.
     let s0 = get_custom_rendezvous_server(custom);
-    if !s0.is_empty() {
-        let s = crate::increase_port(&s0, -2);
-        if s == s0 {
-            let s = if hbb_common::is_ipv6_str(&s) && !s.starts_with('[') {
-                format!("[{s}]")
-            } else {
-                s
-            };
-            return format!("http://{}:{}", s, config::RENDEZVOUS_PORT - 2);
-        } else {
-            return format!("http://{}", s);
-        }
+    let prod = config::PROD_RENDEZVOUS_SERVER.read().unwrap().clone();
+    if s0.is_empty() || (!prod.is_empty() && s0.starts_with(&prod)) {
+        return config::API_SERVER.to_owned();
     }
-    "https://admin.rustdesk.com".to_owned()
+
+    "https://desk.gzlig.com".to_owned()
 }
 
 #[inline]
